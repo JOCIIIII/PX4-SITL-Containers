@@ -2,6 +2,12 @@
 
 ## How-to-Build
 
+- Clone the repositoy including submodules:
+
+```bash
+git clone https://github.com/kestr31/PX4-SITL-Containers.git --recursive
+```
+
 - Build process is automated using bash script `build.sh`.
 - `build.sh` allows use of following arguments:
     - `all`: Build all modified images (AirSim, QGroundControl, ROS2).
