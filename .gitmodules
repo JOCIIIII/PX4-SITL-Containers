@@ -1,0 +1,12 @@
+[submodule "Dockerfile/QGroundControl"]
+	path = Dockerfile/QGroundControl
+	url = https://github.com/kestr31/QGC-app-docker.git
+[submodule "Dockerfile/PX4-Autopilot"]
+	path = Dockerfile/PX4-Autopilot
+	url = https://github.com/PX4/PX4-containers.git
+[submodule "Dockerfile/ROS2"]
+	path = Dockerfile/ROS2
+	url = https://github.com/athackst/dockerfiles.git
+[submodule "Dockerfile/Gazebo-Classic"]
+	path = Dockerfile/Gazebo-Classic
+	url = https://github.com/athackst/dockerfiles.git
