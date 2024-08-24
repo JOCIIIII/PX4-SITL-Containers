@@ -71,7 +71,7 @@ BuildROS2Container() {
     # BuildROS2Container $0 ${REPO_DIR}/Dockerfiles/ROS2
     # ---------------------------------------------------
     SCRIPT_NAME=$(basename "$1")
-    RESOURCE_DIR=$2/ros2
+    RESOURCE_DIR=$2
 
     DOCKER_BUILDKIT=1
     DOCKERFILE_NAME="galactic-cuda.Dockerfile"
@@ -81,31 +81,33 @@ BuildROS2Container() {
 
     # REPLACE THE BASE IMAGE
     sed -i "s|nvidia/cuda:11.7.0-runtime-ubuntu20.04|nvcr.io/nvidia/tensorrt:22.12-py3|g" \
-        ${RESOURCE_DIR}/${DOCKERFILE_NAME}
+        ${RESOURCE_DIR}/ROS2/ros2/${DOCKERFILE_NAME}
 
     # FIND A LINE NUMBER WHICH CONTAINS "FROM full AS gazebo"
-    GAZEBO_STAGE_LINE=$(grep -n "FROM full AS gazebo" ${RESOURCE_DIR}/${DOCKERFILE_NAME} | cut -d: -f1)
+    GAZEBO_STAGE_LINE=$(grep -n "FROM full AS gazebo" ${RESOURCE_DIR}/ROS2/ros2/${DOCKERFILE_NAME} | cut -d: -f1)
     # DELETE FROM GAZEBO_STAGE_LINE - 3 TO THE END OF THE FILE
 
     if [ ! -z ${GAZEBO_STAGE_LINE} ]; then
         sed -i "${GAZEBO_STAGE_LINE},\$d" \
-            ${RESOURCE_DIR}/${DOCKERFILE_NAME}
+            ${RESOURCE_DIR}/ROS2/ros2/${DOCKERFILE_NAME}
     fi
 
-    ADDITIONAL_PACKAGES="gymnasium stable_baselines3 Shimmy torch"
+    # READ ADDITIONAL PACKAGES LINE BY LINE FROM ${RESOURCE_DIR}/pyDeps.txt
+    # SAVE IT TO SPACE SEPARATED STRING
+    ADDITIONAL_PACKAGES=$(cat ${RESOURCE_DIR}/pyDeps.txt | tr '\n' ' ')
 
     # INSTALL torch and gym
     sed -i "s|pip install --upgrade pydocstyle|pip install --upgrade pydocstyle ${ADDITIONAL_PACKAGES}|g" \
-            ${RESOURCE_DIR}/${DOCKERFILE_NAME}
+            ${RESOURCE_DIR}/ROS2/ros2/${DOCKERFILE_NAME}
 
-    # BUILD THE IMAGE
+    BUILD THE IMAGE
     docker build \
         -t ${IMAGE_NAME}:${IMAGE_TAG} \
-        -f ${RESOURCE_DIR}/${DOCKERFILE_NAME} \
-        ${RESOURCE_DIR}
+        -f ${RESOURCE_DIR}/ROS2/ros2/${DOCKERFILE_NAME} \
+        ${RESOURCE_DIR}/ROS2/ros2
 
     # REVERT THE CHANGES
-    git -C $2 reset --hard
-    git -C $2 clean -fdx
+    git -C ${RESOURCE_DIR}/ROS2 reset --hard
+    git -C ${RESOURCE_DIR}/ROS2 clean -fdx
 }
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
