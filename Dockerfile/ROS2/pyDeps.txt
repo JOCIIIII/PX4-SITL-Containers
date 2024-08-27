@@ -1,0 +1,14 @@
+airsim
+gymnasium
+matplotlib
+onnx
+onnxruntime-gpu==1.16.3
+opencv-python
+pycuda
+pytictoc
+requests
+scikit-learn
+setuptools==58.2
+Shimmy
+stable_baselines3
+torch

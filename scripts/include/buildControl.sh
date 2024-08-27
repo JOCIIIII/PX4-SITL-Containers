@@ -92,15 +92,26 @@ BuildROS2Container() {
             ${RESOURCE_DIR}/ROS2/ros2/${DOCKERFILE_NAME}
     fi
 
-    # READ ADDITIONAL PACKAGES LINE BY LINE FROM ${RESOURCE_DIR}/pyDeps.txt
+    # READ ADDITIONAL PACKAGES LINE BY LINE FROM ${RESOURCE_DIR}/aptDeps.txt and pyDeps.txt
     # SAVE IT TO SPACE SEPARATED STRING
-    ADDITIONAL_PACKAGES=$(cat ${RESOURCE_DIR}/pyDeps.txt | tr '\n' ' ')
+    ADDITIONAL_APT_PACKAGES=$(cat ${RESOURCE_DIR}/aptDeps.txt | tr '\n' ' ')
 
-    # INSTALL torch and gym
-    sed -i "s|pip install --upgrade pydocstyle|pip install --upgrade pydocstyle ${ADDITIONAL_PACKAGES}|g" \
+    echo "ADDITIONAL_APT_PACKAGES: ${ADDITIONAL_APT_PACKAGES}"
+
+    ADDITIONAL_PYTHON_PACKAGES=$(cat ${RESOURCE_DIR}/pyDeps.txt | tr '\n' ' ')
+
+    # INSTALL ADDITIONAL PACKAGES
+    sed -i "s|ros-galactic-desktop| ros-galactic-desktop ${ADDITIONAL_APT_PACKAGES}|g" \
+        ${RESOURCE_DIR}/ROS2/ros2/${DOCKERFILE_NAME}
+
+    sed -i "s|upgrade pydocstyle|upgrade pydocstyle msgpack-rpc-python \\\|g" \
             ${RESOURCE_DIR}/ROS2/ros2/${DOCKERFILE_NAME}
 
-    BUILD THE IMAGE
+    # THEN, APPEND ADDITIONAL_PYTHON_PACKAGES ON THE NEXT LINE APPENDED LINE MUST HAVE TWO BLANKS IN THE BEGINNING
+    sed -i "/upgrade pydocstyle msgpack-rpc-python/a \ \ && pip install --upgrade ${ADDITIONAL_PYTHON_PACKAGES}" \
+        ${RESOURCE_DIR}/ROS2/ros2/${DOCKERFILE_NAME}
+
+    # BUILD THE IMAGE
     docker build \
         -t ${IMAGE_NAME}:${IMAGE_TAG} \
         -f ${RESOURCE_DIR}/ROS2/ros2/${DOCKERFILE_NAME} \
