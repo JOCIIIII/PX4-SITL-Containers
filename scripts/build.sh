@@ -52,6 +52,14 @@ elif [ "$1x" == "qgcx" ]; then
     BuildQGCContainer $0 ${RESOURCE_DIR}
 elif [ "$1x" == "ros2x" ]; then
     RESOURCE_DIR=${REPO_DIR}/Dockerfile/ROS2
+
+    # CHECK IF .deb FILE WITH NAME FORMAT *tenrorrt*cuda-11.8* IS PRESENT
+    # USE REGEX AND IF IT NOT PRESENT, HALT THE BUILD
+    if [ -z "$(ls ${RESOURCE_DIR} | grep -E '.*tensorrt.*cuda-11.8.*')" ]; then
+        EchoRed "[$(basename "$0")] NO TENSORRT CUDA 11.8 DEB FILE FOUND IN ${RESOURCE_DIR}"
+        exit 1
+    fi
+
     BuildROS2Container $0 ${RESOURCE_DIR}
 fi
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

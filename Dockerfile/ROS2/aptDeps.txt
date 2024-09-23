@@ -1,1 +1,8 @@
-ros-galactic-geographic-msgs
+libyaml-cpp-dev
+python3-rosdep
+ros-humble-cv-bridge
+ros-humble-geographic-msgs
+ros-humble-image-transport
+ros-humble-joy
+ros-humble-mavros-msgs
+ros-humble-pcl-conversions

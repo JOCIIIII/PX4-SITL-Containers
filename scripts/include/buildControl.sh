@@ -73,43 +73,56 @@ BuildROS2Container() {
     SCRIPT_NAME=$(basename "$1")
     RESOURCE_DIR=$2
 
+    ROS_DISTRO="humble"
+
     DOCKER_BUILDKIT=1
-    DOCKERFILE_NAME="galactic-cuda.Dockerfile"
+    DOCKERFILE_NAME="${ROS_DISTRO}-cuda.Dockerfile"
 
     IMAGE_NAME="${CONTAINER_BUILD_USERNAME}/sitl-ros2"
-    IMAGE_TAG="galactic-cuda-tensorrt-full"
+    IMAGE_TAG="${ROS_DISTRO}-cuda-tensorrt-full"
 
     # REPLACE THE BASE IMAGE
-    sed -i "s|nvidia/cuda:11.7.0-runtime-ubuntu20.04|nvcr.io/nvidia/tensorrt:22.12-py3|g" \
+    sed -i "s|nvidia/cuda:11.8.0-runtime-ubuntu22.04|nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04|g" \
         ${RESOURCE_DIR}/ROS2/ros2/${DOCKERFILE_NAME}
 
     # FIND A LINE NUMBER WHICH CONTAINS "FROM full AS gazebo"
     GAZEBO_STAGE_LINE=$(grep -n "FROM full AS gazebo" ${RESOURCE_DIR}/ROS2/ros2/${DOCKERFILE_NAME} | cut -d: -f1)
+    
     # DELETE FROM GAZEBO_STAGE_LINE - 3 TO THE END OF THE FILE
-
     if [ ! -z ${GAZEBO_STAGE_LINE} ]; then
         sed -i "${GAZEBO_STAGE_LINE},\$d" \
             ${RESOURCE_DIR}/ROS2/ros2/${DOCKERFILE_NAME}
     fi
 
+    # GET THE NAME OF THE DEB FILE WITH NAME FORMAT *tenrorrt*cuda-11.8*
+    TENSORRT_DEB_FILE=$(ls ${RESOURCE_DIR} | grep -E '.*tensorrt.*cuda-11.8.*')
+    cp ${RESOURCE_DIR}/${TENSORRT_DEB_FILE} ${RESOURCE_DIR}/ROS2/ros2
+
+    sed -i "/FROM dev AS full/a COPY ${TENSORRT_DEB_FILE} /tmp/trt.deb" \
+        ${RESOURCE_DIR}/ROS2/ros2/${DOCKERFILE_NAME}
+
     # READ ADDITIONAL PACKAGES LINE BY LINE FROM ${RESOURCE_DIR}/aptDeps.txt and pyDeps.txt
     # SAVE IT TO SPACE SEPARATED STRING
     ADDITIONAL_APT_PACKAGES=$(cat ${RESOURCE_DIR}/aptDeps.txt | tr '\n' ' ')
-
-    echo "ADDITIONAL_APT_PACKAGES: ${ADDITIONAL_APT_PACKAGES}"
-
     ADDITIONAL_PYTHON_PACKAGES=$(cat ${RESOURCE_DIR}/pyDeps.txt | tr '\n' ' ')
 
     # INSTALL ADDITIONAL PACKAGES
-    sed -i "s|ros-galactic-desktop| ros-galactic-desktop ${ADDITIONAL_APT_PACKAGES}|g" \
+    sed -i "s|ros-${ROS_DISTRO}-desktop|ros-${ROS_DISTRO}-desktop ${ADDITIONAL_APT_PACKAGES}|g" \
         ${RESOURCE_DIR}/ROS2/ros2/${DOCKERFILE_NAME}
 
-    sed -i "s|upgrade pydocstyle|upgrade pydocstyle msgpack-rpc-python \\\|g" \
-            ${RESOURCE_DIR}/ROS2/ros2/${DOCKERFILE_NAME}
+    sed -i "/ros-${ROS_DISTRO}-desktop ${ADDITIONAL_APT_PACKAGES}/a\  && apt install /tmp/trt.deb \\\\" \
+        ${RESOURCE_DIR}/ROS2/ros2/${DOCKERFILE_NAME}
+
+    sed -i "/apt install \/tmp\/trt.deb/a\  && pip install --upgrade ${ADDITIONAL_PYTHON_PACKAGES} \\\\" \
+        ${RESOURCE_DIR}/ROS2/ros2/${DOCKERFILE_NAME}
+
+    sed -i "/apt install \/tmp\/trt.deb/a\  && pip install --upgrade msgpack-rpc-python \\\\" \
+        ${RESOURCE_DIR}/ROS2/ros2/${DOCKERFILE_NAME}
 
     # THEN, APPEND ADDITIONAL_PYTHON_PACKAGES ON THE NEXT LINE APPENDED LINE MUST HAVE TWO BLANKS IN THE BEGINNING
     sed -i "/upgrade pydocstyle msgpack-rpc-python/a \ \ && pip install --upgrade ${ADDITIONAL_PYTHON_PACKAGES}" \
         ${RESOURCE_DIR}/ROS2/ros2/${DOCKERFILE_NAME}
+
 
     # BUILD THE IMAGE
     docker build \
