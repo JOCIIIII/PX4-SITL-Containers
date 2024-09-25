@@ -1,6 +1,7 @@
 libyaml-cpp-dev
 python3-rosdep
 ros-humble-cv-bridge
+ros-humble-depth-image-proc
 ros-humble-geographic-msgs
 ros-humble-image-transport
 ros-humble-joy

@@ -1,6 +1,7 @@
-airsim
+cosysairsim
 gymnasium
 matplotlib
+numpy==1.26.4
 onnx
 onnxruntime-gpu==1.16.3
 opencv-python
