@@ -7,3 +7,4 @@ ros-humble-image-transport
 ros-humble-joy
 ros-humble-mavros-msgs
 ros-humble-pcl-conversions
+python3-libnvinfer
